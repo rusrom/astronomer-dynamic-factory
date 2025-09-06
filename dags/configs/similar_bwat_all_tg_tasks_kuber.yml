@@ -1,0 +1,47 @@
+default:
+  default_args:
+    owner: romblox
+    start_date: 2024-01-01
+  schedule: 0 1 * * *
+  catchup: false
+
+availability_check:
+  description: "Task group: availability_check"
+  start_date: 2025-01-01
+  catchup: false
+  task_groups:
+    - group_name: "availability_check_group"
+      tooltip: "Group for availability_check tasks"
+  tasks:
+    - task_id: prepare
+      operator: airflow.providers.cncf.kubernetes.operators.pod.KubernetesPodOperator
+      config_file: "/home/rusrom/.kube/config"
+      image: "python:3.12-slim"
+      cmds: ["python", "-c"]
+      arguments: ["print('availability_check: prepare')"]
+      name: "availability-check-prepare"
+      namespace: "default"
+      get_logs: true
+      task_group_name: availability_check_group
+    - task_id: pos_task
+      operator: airflow.providers.cncf.kubernetes.operators.pod.KubernetesPodOperator
+      config_file: "/home/rusrom/.kube/config"
+      image: "python:3.12-slim"
+      cmds: ["python", "-c"]
+      arguments: ["print('availability_check: pos_task')"]
+      name: "availability-check-pos-task"
+      namespace: "default"
+      get_logs: true
+      task_group_name: availability_check_group
+      dependencies: ["prepare"]
+    - task_id: sds
+      operator: airflow.providers.cncf.kubernetes.operators.pod.KubernetesPodOperator
+      config_file: "/home/rusrom/.kube/config"
+      image: "python:3.12-slim"
+      cmds: ["python", "-c"]
+      arguments: ["print('availability_check: sds')"]
+      name: "availability-check-sds"
+      namespace: "default"
+      get_logs: true
+      task_group_name: availability_check_group
+      dependencies: ["pos_task"]
