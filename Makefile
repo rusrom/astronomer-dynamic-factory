@@ -1,0 +1,2 @@
+up:
+	airflow standalone
