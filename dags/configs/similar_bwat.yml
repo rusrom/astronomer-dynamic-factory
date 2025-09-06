@@ -10,9 +10,19 @@ availability_check:
   description: "Task group: availability_check"
   start_date: 2025-01-01
   catchup: false
+  
   task_groups:
     - group_name: "availability_check_group"
       tooltip: "Group for availability_check tasks"
+    - group_name: "load_group"
+      tooltip: "Group for load tasks"
+    - group_name: "unarchive_group"
+      tooltip: "Group for unarchive tasks"
+    - group_name: "transform_group"
+      tooltip: "Group for transform tasks"
+    - group_name: "metadata_check_group"
+      tooltip: "Group for metadata_check tasks"
+
   tasks:
     - task_id: some_processing
       operator: airflow.operators.python.PythonOperator
@@ -55,3 +65,105 @@ availability_check:
       bash_command: "echo sds"
       task_group_name: availability_check_group
       dependencies: ["pod_task"]
+
+    - task_id: load_prepare
+      operator: airflow.operators.bash.BashOperator
+      bash_command: "echo prepare"
+      task_group_name: load_group
+      dependencies: ["sds"]
+
+    - task_id: load_pod_task
+      operator: airflow.providers.cncf.kubernetes.operators.pod.KubernetesPodOperator
+      config_file: "/home/rusrom/.kube/config"
+      image: "python:3.12-slim"
+      cmds: ["python", "-c"]
+      arguments: ["print('load: pod_task')"]
+      name: "load-pod-task"
+      namespace: "default"
+      get_logs: true
+      task_group_name: load_group
+      dependencies: ["load_prepare"]
+
+    - task_id: load_sds
+      operator: airflow.operators.bash.BashOperator
+      bash_command: "echo sds"
+      task_group_name: load_group
+      dependencies: ["load_pod_task"]
+    
+    - task_id: unarchive_prepare
+      operator: airflow.operators.bash.BashOperator
+      bash_command: "echo unarchive_prepare"
+      task_group_name: unarchive_group
+      dependencies: ["load_sds"]
+
+    - task_id: unarchive_pod_task
+      operator: airflow.providers.cncf.kubernetes.operators.pod.KubernetesPodOperator
+      config_file: "/home/rusrom/.kube/config"
+      image: "python:3.12-slim"
+      cmds: ["python", "-c"]
+      arguments: ["print('unarchive: pod_task')"]
+      name: "unarchive-pod-task"
+      namespace: "default"
+      get_logs: true
+      task_group_name: unarchive_group
+      dependencies: ["unarchive_prepare"]
+
+    - task_id: unarchive_sds
+      operator: airflow.operators.bash.BashOperator
+      bash_command: "echo sds"
+      task_group_name: unarchive_group
+      dependencies: ["unarchive_pod_task"]
+    
+    - task_id: transform_prepare
+      operator: airflow.operators.bash.BashOperator
+      bash_command: "echo transform_prepare"
+      task_group_name: transform_group
+      dependencies: ["unarchive_sds"]
+
+    - task_id: transform_pod_task
+      operator: airflow.providers.cncf.kubernetes.operators.pod.KubernetesPodOperator
+      config_file: "/home/rusrom/.kube/config"
+      image: "python:3.12-slim"
+      cmds: ["python", "-c"]
+      arguments: ["print('transform: pod_task')"]
+      name: "transform-pod-task"
+      namespace: "default"
+      get_logs: true
+      task_group_name: transform_group
+      dependencies: ["transform_prepare"]
+
+    - task_id: transform_sds
+      operator: airflow.operators.bash.BashOperator
+      bash_command: "echo sds"
+      task_group_name: transform_group
+      dependencies: ["transform_pod_task"]
+    
+    - task_id: metadata_check_prepare
+      operator: airflow.operators.bash.BashOperator
+      bash_command: "echo metadata_check_prepare"
+      task_group_name: metadata_check_group
+      dependencies: ["transform_sds"]
+
+    - task_id: metadata_check_pod_task
+      operator: airflow.providers.cncf.kubernetes.operators.pod.KubernetesPodOperator
+      config_file: "/home/rusrom/.kube/config"
+      image: "python:3.12-slim"
+      cmds: ["python", "-c"]
+      arguments: ["print('metadata_check: pod_task')"]
+      name: "metadata_check-pod-task"
+      namespace: "default"
+      get_logs: true
+      task_group_name: metadata_check_group
+      dependencies: ["metadata_check_prepare"]
+
+    - task_id: metadata_check_sds
+      operator: airflow.operators.bash.BashOperator
+      bash_command: "echo sds"
+      task_group_name: metadata_check_group
+      dependencies: ["metadata_check_pod_task"]
+
+    - task_id: promote
+      operator: airflow.operators.python.PythonOperator
+      python_callable_name: make_list
+      python_callable_file: $AIRFLOW_INCLUDE_DIR/similar_bwat/expand_tasks.py
+      dependencies: ["metadata_check_sds"]
