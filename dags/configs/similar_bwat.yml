@@ -1,0 +1,57 @@
+default:
+  default_args:
+    owner: romblox
+    start_date: 2024-01-01
+  schedule: 0 1 * * *
+  catchup: false
+  tags: ["africa", "cb", "romblox"]
+
+availability_check:
+  description: "Task group: availability_check"
+  start_date: 2025-01-01
+  catchup: false
+  task_groups:
+    - group_name: "availability_check_group"
+      tooltip: "Group for availability_check tasks"
+  tasks:
+    - task_id: some_processing
+      operator: airflow.operators.python.PythonOperator
+      python_callable_name: make_list
+      python_callable_file: $AIRFLOW_INCLUDE_DIR/similar_bwat/expand_tasks.py
+    
+    - task_id: some_calculate
+      operator: airflow.operators.python.PythonOperator
+      python_callable_name: consume_value
+      python_callable_file: $AIRFLOW_INCLUDE_DIR/similar_bwat/expand_tasks.py
+      partial:
+        op_kwargs:
+          fixed_param: "test"
+      expand:
+        op_args:
+            some_processing.output
+      task_group_name: availability_check_group
+      dependencies: ["some_processing"]
+
+    - task_id: prepare
+      operator: airflow.operators.bash.BashOperator
+      bash_command: "echo prepare"
+      task_group_name: availability_check_group
+      dependencies: ["some_calculate"]
+
+    - task_id: pod_task
+      operator: airflow.providers.cncf.kubernetes.operators.pod.KubernetesPodOperator
+      config_file: "/home/rusrom/.kube/config"
+      image: "python:3.12-slim"
+      cmds: ["python", "-c"]
+      arguments: ["print('availability_check: pod_task')"]
+      name: "availability-check-pod-task"
+      namespace: "default"
+      get_logs: true
+      task_group_name: availability_check_group
+      dependencies: ["prepare"]
+
+    - task_id: sds
+      operator: airflow.operators.bash.BashOperator
+      bash_command: "echo sds"
+      task_group_name: availability_check_group
+      dependencies: ["pod_task"]
