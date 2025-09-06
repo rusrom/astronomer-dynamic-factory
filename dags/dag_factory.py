@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from airflow.models.dag import DAG
+# from airflow.models.dag import DAG
 from airflow.configuration import conf as airflow_conf
 from dagfactory import load_yaml_dags
 
