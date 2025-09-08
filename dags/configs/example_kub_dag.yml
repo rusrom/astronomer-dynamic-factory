@@ -4,6 +4,7 @@ default:
     start_date: 2024-01-01
   schedule: 0 1 * * *
   catchup: false
+  tags: ["multi", "kub", "example"]
 
 kubernetes_pod_dag:
   start_date: 2025-01-01
