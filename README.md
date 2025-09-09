@@ -30,3 +30,6 @@ uv add dag-factory
 ```shell
 airflow standalone
 ```
+
+## Airflow callbacks
+[Callbacks](https://airflow.apache.org/docs/apache-airflow/2.5.2/administration-and-deployment/logging-monitoring/callbacks.html)
