@@ -19,10 +19,10 @@ callbacks:
   # Task. Previously, the same "on_success_callback" configuration was set as part of task_2
   # on_execute_callback_name: print_hello_from_callback
   # on_execute_callback_file: $AIRFLOW_INCLUDE_DIR/similar_bwat/print_hello.py
-  # on_success_callback:
-  #   callback: customized.callbacks.custom_callbacks.output_message
-  #   param1: param1
-  #   param2: param2
+  on_success_callback:
+    callback: customized.callbacks.custom_callbacks.dag_level_output_message
+    param1: some_custom_param_1
+    param2: some_custom_param_2
   task_groups:
     - group_name: "task_group_1"
       default_args:
@@ -31,7 +31,7 @@ callbacks:
   tasks:
     - task_id: "start"
       operator: airflow.operators.empty.EmptyOperator
-      on_success_callback_name: print_hello_from_callback_for_task_1
+      on_success_callback_name: print_hello_from_callback_for_task_start
       on_success_callback_file: $AIRFLOW_INCLUDE_DIR/similar_bwat/print_hello.py
     - task_id: "task_1"
       operator: airflow.operators.bash.BashOperator
