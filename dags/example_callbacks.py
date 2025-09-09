@@ -1,0 +1,23 @@
+# import os
+from pathlib import Path
+
+# The following import is here so Airflow parses this file
+# from airflow import DAG
+from dagfactory import load_yaml_dags
+from airflow.configuration import conf as airflow_conf
+
+# DEFAULT_CONFIG_ROOT_DIR = "/usr/local/airflow/dags/"
+# CONFIG_ROOT_DIR = Path(os.getenv("CONFIG_ROOT_DIR", DEFAULT_CONFIG_ROOT_DIR))
+
+# config_file = str(CONFIG_ROOT_DIR / "example_callbacks.yml")
+
+
+# load_yaml_dags(
+#     globals_dict=globals(),
+#     config_filepath=config_file,
+# )
+
+config_dir = Path(airflow_conf.get("core", "dags_folder")) / "configs"
+config_file = str(config_dir / "example_callbacks.yml")
+
+load_yaml_dags(globals_dict=globals(), config_filepath=config_file)
