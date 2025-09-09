@@ -3,15 +3,15 @@ callbacks:
     start_date: "2025-01-01"
     # Callbacks at be set at the default_args level. These callbacks are then passed to each Task
     # Fun fact: default_args can be overridden within a Task
-    on_retry_callback: print_hello.print_hello_from_callback
-    on_failure_callback:
-      callback: airflow.providers.slack.notifications.slack.send_slack_notification
-      slack_conn_id: slack_conn_id
-      text: |
-        :red_circle: Task Failed.
-        This task has failed and needs to be addressed.
-        Please remediate this issue ASAP.
-      channel: "#channel"
+    # on_retry_callback: print_hello.print_hello_from_callback
+    # on_failure_callback:
+    #   callback: airflow.providers.slack.notifications.slack.send_slack_notification
+    #   slack_conn_id: slack_conn_id
+    #   text: |
+    #     :red_circle: Task Failed.
+    #     This task has failed and needs to be addressed.
+    #     Please remediate this issue ASAP.
+    #   channel: "#channel"
   schedule: "@daily"
   catchup: False
   # These callbacks are set at the DAG-level, vs. the callbacks set above in default_args that are passed onto each
