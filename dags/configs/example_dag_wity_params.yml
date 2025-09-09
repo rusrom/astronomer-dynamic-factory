@@ -1,0 +1,24 @@
+default:
+  catchup: false
+  default_args:
+    start_date: 2025-01-01
+
+example_params:
+  params:
+    model_version: 1.0.0
+    input_uri: localhost
+  description: "This is an DAG-Factory example dag with param"
+  schedule: "@daily"
+  tasks:
+    - task_id: "task_1"
+      operator: airflow.operators.bash.BashOperator
+      bash_command: "echo 'Running task 1 with model version {{ params.model_version }} and url: {{ params.input_uri }}'"
+    - task_id: "task_2"
+      operator: airflow.operators.python.PythonOperator
+      params:
+        my_param: 10
+      # python_callable: sample.read_params
+      python_callable_name: read_params
+      python_callable_file: $AIRFLOW_INCLUDE_DIR/similar_bwat/sample.py
+      dependencies:
+        - "task_1"
